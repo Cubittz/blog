@@ -2,10 +2,8 @@
 {% block content %}
 <h1>Yay!</h1>
 <a href="/New">New Blog Post</a>
-    {% for post in posts %}
-        <div class="blog">
-                <div class="blog-title">{{post.subject}}</div>
-                <div class="blog-body">{{post.content}}</div>
-        </div>
+    {% for p in posts %}
+        {{ p.render() | safe }}
+        <br><br>
     {% endfor %}
 {% endblock %}
