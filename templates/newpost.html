@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Add New Blog</h1>
+<form method="post">
+    <label>
+        <div>Blog Title</div>
+        <input type="text" name="title" value="{{title}}">
+    </label>
+    <br>
+    <label>
+        <div>Blog Content</div>
+        <div id="summernote" name="blogContent">{{blogContent}}</div>
+    </label>
+    <div class="error">{{ error }}</div>
+    <input type="submit">
+</form>
+<script>
+    $(document).ready(function() {
+        $('#summernote').summernote();
+    });
+  </script>
+{% endblock %}
