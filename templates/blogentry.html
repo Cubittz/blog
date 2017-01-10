@@ -1,4 +1,4 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>{{p.subject}}</h1>
+<h1>{{ post.render() | safe }}</h1>
 {% endblock %}
