@@ -66,7 +66,7 @@ class NewPage(Handler):
         if subject and content:
             p = Post(parent = blog_key(), subject=subject, content = content)
             p.put()
-            self.redirect('/%s', % str(p.key().id()))
+            self.redirect('/%s' % str(p.key().id()))
         else:
             error = "subject and content, pelase!"
             self.render("newpost.html", subject = subject, content = content, error = error)
