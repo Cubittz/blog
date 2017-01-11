@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Yay!</h1>
-<a href="/New">New Blog Post</a>
+<a href="/newpost">New Blog Post</a>
     {% for p in posts %}
         {{ p.render() | safe }}
         <br><br>

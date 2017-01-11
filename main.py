@@ -74,6 +74,6 @@ class NewPage(Handler):
             self.render("newpost.html", subject = subject, content = content, error = error)
 
 app = webapp2.WSGIApplication([('/', MainPage),
-                                ('/New', NewPage),
+                                ('/newpost', NewPage),
                                 ('/([0-9]+)', PostPage)]
                                 , debug = True)
