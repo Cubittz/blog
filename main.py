@@ -100,6 +100,8 @@ class User(db.Model):
 
     @classmethod
     def login(cls, name, pw):
+        print name
+        print pw
         u = cls.by_name(name)
         if u and valid_pw(name, pw, u.pw_hash):
             return u
@@ -218,6 +220,23 @@ class NewPage(Handler):
             error = "subject and content, pelase!"
             self.render("newpost.html", subject = subject, content = content, error = error)
 
+class Login(Handler):
+    def get(self):
+        self.render('login.html')
+
+    def post(self):
+        username = self.request.get('username')
+        password = self.request.get('password')
+        print username
+        u = User.login(username, password)
+        if u:
+            self.login(u)
+            self.redirect('/')
+        else:
+            print 'hello'
+            msg = 'Invalid Login'
+            self.render('login.html', error = msg)
+
 class Logout(Handler):
     def get(self):
         self.logout()
@@ -225,6 +244,7 @@ class Logout(Handler):
 
 app = webapp2.WSGIApplication([('/', MainPage),
                                 ('/signup', Register),
+                                ('/login', Login),
                                 ('/logout', Logout),
                                 ('/newpost', NewPage),
                                 ('/([0-9]+)', PostPage)]

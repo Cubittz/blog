@@ -2,61 +2,36 @@
 {% block content %}
 <div class="login-area">
     <h2>Signup</h2>
-    <form method="post" class="form-horizontal">
+    <form novalidate method="post" class="form-horizontal">
         <div class="form-group">
-            <label for="inputProductName" class="control-label col-md-2">Username</label>
+            <label for="username" class="control-label col-md-2">Username</label>
             <div class="col-md-4">
-                <input type="text" name="username" value="{{username}}">
+                <input class="form-control" type="text" id="username" name="username" value="{{username}}">
             </div>
+            <label class="error col-md-2">{{error_username}}</label>
         </div>
-        <table>
-            <tr>
-                <td class="label">
-                    Username
-                </td>
-                <td>
-                    <input type="text" name="username" value="{{username}}">
-                </td>
-                <td class="error">
-                    {{error_username}}
-                </td>
-            </tr>
-            <tr>
-                <td class="label">
-                    Password
-                </td>
-                <td>
-                    <input type="password" name="password" value="">
-                </td>
-                <td class="error">
-                    {{error_password}}
-                </td>
-            </tr>
-            <tr>
-                <td class="label">
-                    Verify Password
-                </td>
-                <td>
-                    <input type="password" name="verify" value="">
-                </td>
-                <td class="error">
-                    {{error_verify}}
-                </td>
-            </tr>
-            <tr>
-                <td class="label">
-                    Email (optional)
-                </td>
-                <td>
-                    <input type="text" name="email" value="{{email}}">
-                </td>
-                <td class="error">
-                    {{error_email}}
-                </td>
-            </tr>
-        </table>
-
-        <input type="submit">
+        <div class="form-group">
+            <label for="password" class="control-label col-md-2">Password</label>
+            <div class="col-md-4">
+                <input class="form-control" type="password" id="password" name="password" value="">
+            </div>
+            <label class="error col-md-4">{{error_password}}</label>
+        </div>
+        <div class="form-group">
+            <label for="verify" class="control-label col-md-2">Verify Password</label>
+            <div class="col-md-4">
+                <input class="form-control" type="password" id="verify" name="verify" value="">
+            </div>
+            <label class="error col-md-4">{{error_verify}}</label>
+        </div>
+        <div class="form-group">
+            <label for="email" class="control-label col-md-2">Email (optional)</label>
+            <div class="col-md-4">
+                <input class="form-control" type="text" id="email" name="email" value="{{email}}">
+            </div>
+            <label class="error col-md-4">{{error_email}}</label>
+        </div>
+        <input type="submit" class="btn btn-primary">
     </form>
 </div>
 {% endblock %}
