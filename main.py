@@ -27,6 +27,12 @@ class Handler(webapp2.RequestHandler):
     def render(self, template, **kw):
         self.write(self.render_str(template, **kw))
 
+###### user
+USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
+def valid_username(username):
+    return username and USER_RE.match(username)
+
+
 ###### blog
 
 def blog_key(name = 'default'):
@@ -44,12 +50,31 @@ class Post(db.Model):
 
 class MainPage(Handler):
     def get(self):
-        visits = self.request.cookies.get('visits', 0)
-        visits += 1
-        self.response.headers.add_header('Set-Cookie', 'visits=%s' % visits)
-
         posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC limit 10")
         self.render("index.html", posts = posts)
+
+class SignupPage(Handler):
+    def get(self):
+        self.render("signup.html")
+
+    def post(self):
+        have_error = False
+        username = self.request.get('username')
+        password = self.request.get('password')
+        verify = self.request.get('verify')
+        email = self.request.get('email')
+
+        params = dict(username = username, email = email)
+
+        if not valid_username(username):
+            params['error_username'] = "That's not a valid username."
+            have_error = True
+
+        if have_error:
+            self.render("signup.html", **params)
+        else:
+            self.response.headers.add_header('Set-Cookie', 'user=' + username + '; Path=/')
+            self.redirect('/')
 
 class PostPage(Handler):
     def get(self, post_id):
@@ -79,6 +104,7 @@ class NewPage(Handler):
             self.render("newpost.html", subject = subject, content = content, error = error)
 
 app = webapp2.WSGIApplication([('/', MainPage),
+                                ('/signup', SignupPage),
                                 ('/newpost', NewPage),
                                 ('/([0-9]+)', PostPage)]
                                 , debug = True)
