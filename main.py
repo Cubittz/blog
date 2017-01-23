@@ -9,9 +9,9 @@ from google.appengine.ext import db
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
-                                autoescape = True) 
+                                autoescape = True)
 
-##### helper functions 
+##### helper functions
 
 class Handler(webapp2.RequestHandler):
     def write(self, *a, **kw):
@@ -37,10 +37,14 @@ class Post(db.Model):
 
     def render(self):
         self._render_text = self.content.replace('\n', '<br>')
-        return render_str("post.html", p = self)
+        return self.render_str("post.html", p = self)
 
 class MainPage(Handler):
     def get(self):
+        visits = self.request.cookies.get('visits', 0)
+        visits += 1
+        self.response.headers.add_header('Set-Cookie', 'visits=%s' % visits)
+
         posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC limit 10")
         self.render("index.html", posts = posts)
 
@@ -52,7 +56,7 @@ class PostPage(Handler):
         if not post:
             self.error(404)
             return
-        
+
         self.render("blogentry.html", post = post)
 
 class NewPage(Handler):
