@@ -1,6 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
 <div class="login-area">
     <h2>Signup</h2>
-    <form method="post">
+    <form method="post" class="form-horizontal">
+        <div class="form-group">
+            <label for="inputProductName" class="control-label col-md-2">Username</label>
+            <div class="col-md-4">
+                <input type="text" name="username" value="{{username}}">
+            </div>
+        </div>
         <table>
             <tr>
                 <td class="label">
@@ -51,3 +59,4 @@
         <input type="submit">
     </form>
 </div>
+{% endblock %}

@@ -225,7 +225,6 @@ class Logout(Handler):
 
 app = webapp2.WSGIApplication([('/', MainPage),
                                 ('/signup', Register),
-                                ('/login', Login),
                                 ('/logout', Logout),
                                 ('/newpost', NewPage),
                                 ('/([0-9]+)', PostPage)]

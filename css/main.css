@@ -1,4 +1,5 @@
 body {
+    position: relative;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     font-size: 14px;
 
@@ -40,10 +41,8 @@ input[type=submit] {
 
 .login-area {
     font-size: 13px;
-    color: gray;
     position: absolute;
-    top: 10px;
-    right: 10px;
+    top: 60px;
 }
 
 .login-link {
