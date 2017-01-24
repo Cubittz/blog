@@ -1,4 +1,60 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>{{ post.render() | safe }}</h2>
+<div class="post">
+    <div class="post-heading">
+        <div class="post-title">
+            {{p.subject}}
+        </div>
+        <div class="post-date">
+            {{p.created.strftime("%b %d, %Y")}}
+        </div>
+    </div>
+    <div class="panel-body">
+        <div class="post-content">
+            {{ p.content | safe }}
+        </div>
+    </div>
+    <div class="post-footer">
+        <div class="row">
+            <div class="col-md-6 text-left">
+                <span>by {{ p.author }}
+                    {% if p.author == user.name %}
+                        | <a href="/{{p.key().id()}}">Edit</a>
+                        | <a href="/{{p.key().id()}}">Delete</a>
+                    {% endif %}
+                </span>
+            </div>
+            <div class="col-md-6 text-right">
+                {% if p.author != user.name %}
+                    <span>Like this post! <i class="glyphicon glyphicon-thumbs-up"></i></span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+<h2>Comments ({{ p.comments }})</h2>
+<div class="panel panel-primary">
+    <div class="panel-heading">Add Comment...</div>
+    <form novalidate method="post" action="/comment/{{p.key().id()}}">
+        <div class="panel-body">
+            <textarea name="comment">{{comment}}</textarea>
+        </div>
+        <div class="panel-footer">
+            <input type="submit" class="btn btn-primary" />
+        </div>
+    </form>
+</div>
+{% for c in comments %}
+    <div class="comment-header">
+        <div class="comment-title">
+            {{ c.author.name }}
+        </div>
+        <div class="comment-date">
+            {{ c.created.strftime("%b %d, %Y") }}
+        </div>
+    </div>
+    <div class="comment-body">
+        {{ c.comment }}
+    </div>
+{% endfor %}
 {% endblock %}

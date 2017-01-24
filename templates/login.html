@@ -1,26 +1,32 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="login-area">
-    <h2>Signup</h2>
-    <form novalidate method="post" class="form-horizontal">
-        <div class="form-group">
-            <label for="username" class="control-label col-md-2">Username</label>
-            <div class="col-md-4">
-                <input class="form-control" type="text" id="username" name="username" value="{{username}}">
+<div class="row">
+    <div>
+        <h2>Login</h2>
+        <form novalidate method="post" class="form-horizontal">
+            <div class="form-group">
+                <label for="username" class="control-label col-md-2">Username</label>
+                <div class="col-md-8">
+                    <input class="form-control" type="text" id="username" name="username" value="{{username}}">
+                </div>
+                <label class="error col-md-2">{{error}}</label>
             </div>
-            <label class="error col-md-2">{{error}}</label>
-        </div>
-        <div class="form-group">
-            <label for="password" class="control-label col-md-2">Password</label>
-            <div class="col-md-4">
-                <input class="form-control" type="password" id="password" name="password" value="">
+            <div class="form-group">
+                <label for="password" class="control-label col-md-2">Password</label>
+                <div class="col-md-8">
+                    <input class="form-control" type="password" id="password" name="password" value="">
+                </div>
             </div>
-        </div>
-        <div class="form-group">
-            <div class=" col-md-offset-2">
-                <input type="submit" class="btn btn-primary" value="Login">
+            <div class="form-group">
+                <div class=" col-md-offset-2">
+                    <input type="submit" class="btn btn-primary" value="Login">
+                </div>
             </div>
-        </div>
-    </form>
+        </form>
+    </div>
+    <div>
+        <h2>New User?</h2>
+        <p>Sign up <a href="/signup">here</a></p>
+    </div>
 </div>
 {% endblock %}

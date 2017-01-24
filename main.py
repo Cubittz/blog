@@ -4,6 +4,7 @@ import hashlib
 import hmac
 from string import letters
 import random
+import json
 
 import jinja2
 import webapp2
@@ -36,6 +37,16 @@ class Handler(webapp2.RequestHandler):
 
     def render_str(self, template, **params):
         params['user'] = self.user
+        if self.user:
+            params['welcome_message'] = 'Welcome ' + self.user.name
+            params['welcome'] = '/'
+            params['loginout_message'] = 'Logout'
+            params['loginout'] = '/logout'
+        else:
+            params['welcome_message'] = 'Signup'
+            params['welcome'] = '/signup'
+            params['loginout_message'] = 'Login'
+            params['loginout'] = '/login'
         t = jinja_env.get_template(template)
         return t.render(params)
 
@@ -131,15 +142,22 @@ class Post(db.Model):
     content = db.TextProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
     last_modified = db.DateTimeProperty(auto_now = True)
+    author = db.StringProperty(required = False)
+    likes = db.ListProperty(str)
 
-    def render(self):
+    def render(self, user):
         self._render_text = self.content.replace('\n', '<br>')
-        return render_str("post.html", p = self)
+        return render_str("post.html", p = self, user = user)
+
+class Comment(db.Model):
+    author = db.ReferenceProperty(User)
+    post = db.ReferenceProperty(Post)
+    comment = db.TextProperty(required = True)
+    created = db.DateTimeProperty(auto_now_add = True)
 
 class MainPage(Handler):
     def get(self):
         user = self.request.cookies.get('user')
-        print user
         if not user:
             self.redirect('/signup')
 
@@ -204,23 +222,43 @@ class PostPage(Handler):
             self.error(404)
             return
 
-        self.render("blogentry.html", post = post)
+        comments = db.GqlQuery("SELECT * FROM Comment WHERE post = :1 ORDER BY created", key)
+        post.comments = comments.count()
+
+        user = self.user
+        self.render("blogentry.html", p = post, comments = comments, user = user)
 
 class NewPage(Handler):
     def get(self):
-        self.render("newpost.html")
+        if self.user:
+            self.render("newpost.html")
+        else:
+            self.redirect('/signup')
 
     def post(self):
         subject = self.request.get('subject')
         content = self.request.get('content')
 
         if subject and content:
-            p = Post(parent = blog_key(), subject=subject, content = content)
+            p = Post(parent = blog_key(), subject=subject, content = content, author = self.user.name)
             p.put()
             self.redirect('/%s' % str(p.key().id()))
         else:
             error = "subject and content, pelase!"
             self.render("newpost.html", subject = subject, content = content, error = error)
+
+class CommentHandler(Handler):
+    def post(self, post_id):
+        comment = self.request.get('comment')
+        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        post = db.get(key)
+        user = self.user
+
+        c = Comment(parent = blog_key(), author = user, post = post, comment = comment)
+        c.put()
+
+        self.redirect('/%s' % post_id)
+
 
 class Login(Handler):
     def get(self):
@@ -257,5 +295,6 @@ app = webapp2.WSGIApplication([('/', MainPage),
                                 ('/logout', Logout),
                                 ('/welcome', Welcome),
                                 ('/newpost', NewPage),
+                                ('/comment/([0-9]+)', CommentHandler),
                                 ('/([0-9]+)', PostPage)]
                                 , debug = True)

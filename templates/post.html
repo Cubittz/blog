@@ -1,13 +1,21 @@
-<div class="post">
-    <div class="post-heading">
+<div class="panel panel-primary post">
+    <div class="panel-heading">
         <div class="post-title">
-            {{p.subject}}
+            <a href="/{{p.key().id()}}">{{p.subject}}</a>
         </div>
-        <div class="post-date">
-            {{p.created.strftime("%b %d, %Y")}}
+        <div class="post-date-panel">
         </div>
     </div>
-    <div class="post-content">
-        {{ p.content | safe }}
+    <div class="panel-body">
+        <div class="post-content">
+            {{ p.content[0:500] | safe }}
+            <p><a href="/{{p.key().id()}}">View Complete Post</a></p>
+        </div>
+    </div>
+    <div class="panel-footer">
+        <div class="post-footer row">
+            <p class="col-md-6 text-left">by <b>{{ p.author }}</b> | <em>{{p.created.strftime("%b %d, %Y")}}</em></p>
+            <p class="col-md-6 text-right">Likes ({{ p.likes|length }}) | Comments ({{ p.comments|length }})</p>
+        </div>
     </div>
 </div>
