@@ -25,9 +25,11 @@
                 </span>
             </div>
             <div class="col-md-6 text-right">
+                <form method="post" action="/like/{{p.key().id()}}">
                 {% if p.author != user.name %}
-                    <span>Like this post! <i class="glyphicon glyphicon-thumbs-up"></i></span>
+                    <button type="submit" class="btn btn-primary">Like this post! <i class="glyphicon glyphicon-thumbs-up"></i></button>
                 {% endif %}
+                </form>
             </div>
         </div>
     </div>

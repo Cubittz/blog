@@ -143,7 +143,6 @@ class Post(db.Model):
     created = db.DateTimeProperty(auto_now_add = True)
     last_modified = db.DateTimeProperty(auto_now = True)
     author = db.StringProperty(required = False)
-    likes = db.ListProperty(str)
 
     def render(self, user):
         self._render_text = self.content.replace('\n', '<br>')
@@ -155,13 +154,16 @@ class Comment(db.Model):
     comment = db.TextProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
 
+class Like(db.Model):
+    user = db.ReferenceProperty(User)
+    post = db.ReferenceProperty(Post)
+
 class MainPage(Handler):
     def get(self):
-        user = self.request.cookies.get('user')
-        if not user:
-            self.redirect('/signup')
-
         posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC limit 10")
+        for post in posts:
+            post.comments = 2
+
         self.render("index.html", posts = posts)
 
 class Signup(Handler):
@@ -259,6 +261,16 @@ class CommentHandler(Handler):
 
         self.redirect('/%s' % post_id)
 
+class LikeHandler(Handler):
+    def post(self, post_id):
+        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        post = db.get(key)
+        user = self.user
+
+        l = Like(parent = blog_key(), user = user, post = post)
+        l.put()
+
+        self.redirect('/%s' % post_id)
 
 class Login(Handler):
     def get(self):
@@ -296,5 +308,6 @@ app = webapp2.WSGIApplication([('/', MainPage),
                                 ('/welcome', Welcome),
                                 ('/newpost', NewPage),
                                 ('/comment/([0-9]+)', CommentHandler),
+                                ('/like/([0-9]+)', LikeHandler),
                                 ('/([0-9]+)', PostPage)]
                                 , debug = True)
