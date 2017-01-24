@@ -14,7 +14,7 @@ template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
                                 autoescape = True)
 
-secret = 'd.kyuj44,Np0>g>y6b'
+secret = 'd3re2bfrg4hrbbt'
 
 ##### helper functions
 
@@ -35,7 +35,9 @@ class Handler(webapp2.RequestHandler):
         self.response.out.write(*a, **kw)
 
     def render_str(self, template, **params):
-        return render_str(template, **params)
+        params['user'] = self.user
+        t = jinja_env.get_template(template)
+        return t.render(params)
 
     def render(self, template, **kw):
         self.write(self.render_str(template, **kw))
@@ -70,7 +72,7 @@ def make_pw_hash(name, pw, salt = None):
     return '%s,%s' % (salt, h)
 
 def valid_pw(name, password, h):
-    salt = h.split('|')[0]
+    salt = h.split(',')[0]
     return h == make_pw_hash(name, password, salt)
 
 def users_key(group = 'default'):
@@ -191,7 +193,7 @@ class Register(Signup):
             u.put()
 
             self.login(u)
-            self.redirect('/')
+            self.redirect('/welcome')
 
 class PostPage(Handler):
     def get(self, post_id):
@@ -231,7 +233,7 @@ class Login(Handler):
         u = User.login(username, password)
         if u:
             self.login(u)
-            self.redirect('/')
+            self.redirect('/welcome')
         else:
             print 'hello'
             msg = 'Invalid Login'
@@ -242,10 +244,18 @@ class Logout(Handler):
         self.logout()
         self.redirect('/signup')
 
+class Welcome(Handler):
+    def get(self):
+        if self.user:
+            self.render('welcome.html', username = self.user.name)
+        else:
+            self.redirect('/signup')
+
 app = webapp2.WSGIApplication([('/', MainPage),
                                 ('/signup', Register),
                                 ('/login', Login),
                                 ('/logout', Logout),
+                                ('/welcome', Welcome),
                                 ('/newpost', NewPage),
                                 ('/([0-9]+)', PostPage)]
                                 , debug = True)
