@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="modal fade" id="myModal" tabindex="-1" role="dialog">
+<div class="modal fade" id="deletePostModal" tabindex="-1" role="dialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -16,9 +16,9 @@
             <button type="submit" class="btn btn-primary">Delete</button>
         </form>
       </div>
-    </div><!-- /.modal-content -->
-  </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
+    </div>
+  </div>
+</div>
 <div class="post">
     <div class="post-heading">
         <div class="post-title">
@@ -39,7 +39,7 @@
                 <span>by {{ p.author }}
                     {% if p.author == user.name %}
                         | <a href="/edit/{{p.key().id()}}">Edit</a>
-                        | <a href="#" data-toggle="modal" data-target="#myModal">Delete</a>
+                        | <a href="#" data-toggle="modal" data-target="#deletePostModal">Delete</a>
                     {% endif %}
                 </span>
             </div>
@@ -64,6 +64,7 @@
     <form novalidate method="post" action="/comment/{{p.key().id()}}">
         <div class="panel-body">
             <textarea name="comment">{{comment}}</textarea>
+            <div class="error">{{ error }}</div>
         </div>
         <div class="panel-footer">
             <input type="submit" class="btn btn-primary" />
@@ -72,15 +73,87 @@
 </div>
 {% for c in comments %}
     <div class="comment-header">
-        <div class="comment-title">
-            {{ c.author.name }}
+        <div>
+            <span class="comment-title">{{ c.author.name }}</span>
+            {% if c.author.name == user.name %}
+            | <a href="/comment/edit/{{c.key().id()}}">Edit</a>
+            <a class="editComment" data-post-id='{{ p.key().id() }}' data-comment-id='{{ c.key().id() }}'
+                  data-toggle="modal" data-target="#myModal" style="cursor:pointer">
+                    <span class="fa fa-edit">Edit</span>
+                </a>
+            | <a href="#" data-toggle="modal" data-target="#deleteCommentModal{{c.key().id()}}">Delete</a>
+            {% endif %}
         </div>
         <div class="comment-date">
+            {{ c.created.strftime("%H:%M") }}
             {{ c.created.strftime("%b %d, %Y") }}
         </div>
     </div>
     <div class="comment-body">
         {{ c.comment }}
     </div>
+
+<div class="modal fade" id="deleteCommentModal{{c.key().id()}}" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Confirm Delete</h4>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete?</p>
+      </div>
+      <div class="modal-footer">
+        <form method="post" action="comment/delete/{{c.key().id()}}">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Delete</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- To look at using modal for editing comments. Currently not working.
+<div class="modal" id="editCommentModal{{c.key().id()}}" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Edit Comment</h4>
+      </div>
+      <div class="modal-body">
+        <textarea name="modalComment{{c.key().id()}}">{{c.comment}}</textarea>
+      </div>
+      <div class="modal-footer">
+        <form method="post" action="comment/edit/{{c.key().id()}}">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Update</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+-->
 {% endfor %}
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+          <h4 class="modal-title" id="myModalLabel"></h4>
+        </div>
+        <div class="modal-body">
+          <div>
+            <textarea class="form-control" rows='2'>...</textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <a href='/home' class="btn btn-default" data-dismiss="modal">Close</a>
+          <input type="submit" class="btn btn-primary" value="Confirm Edit!"/>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

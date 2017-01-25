@@ -238,7 +238,7 @@ class PostPage(Handler):
             self.error(404)
             return
 
-        comments = db.GqlQuery("SELECT * FROM Comment WHERE post = :1 ORDER BY created", key)
+        comments = db.GqlQuery("SELECT * FROM Comment WHERE post = :1 ORDER BY created DESC", key)
         post.comments = comments.count()
 
         user = self.user
@@ -304,19 +304,53 @@ class DeletePage(Handler):
 
 class CommentHandler(Handler):
     def post(self, post_id):
-        if self.user:
-            comment = self.request.get('comment')
+        comment = self.request.get('comment')
+        if comment:
+            if self.user:
+                key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+                post = db.get(key)
+                user = self.user
+
+                c = Comment(parent = blog_key(), author = user, post = post, comment = comment)
+                c.put()
+
+                self.redirect('/%s' % post_id)
+            else:
+                msg = "You must log on before you can leave a comment"
+                self.render('login.html', error = msg, url = post_id)
+        else:
+            msg = "Please enter a meaningful comment!"
             key = db.Key.from_path('Post', int(post_id), parent=blog_key())
             post = db.get(key)
-            user = self.user
 
-            c = Comment(parent = blog_key(), author = user, post = post, comment = comment)
+            comments = db.GqlQuery("SELECT * FROM Comment WHERE post = :1 ORDER BY created DESC", key)
+            post.comments = comments.count()
+
+            user = self.user
+            self.render("blogentry.html", p = post, comments = comments, user = user, error = msg)
+
+class DeleteComment(Handler):
+    def post(self, comment_id):
+        key = db.Key.from_path('Comment', int(comment_id), parent=blog_key())
+        comment = db.get(key)
+        post = comment.post.key().id()
+
+        db.delete(comment)
+        time.sleep(0.2)
+
+        self.redirect('/%s' % post)
+
+class EditComment(Handler):
+    def post(self, comment_id):
+        key = db.Key.from_path('Comment', int(comment_id), parent=blog_key())
+        c = db.get(key)
+        post = c.post.key().id()
+        comment = 'Hello' ### self.request.get('modalComment%s' % comment_id)
+        if comment:
+            c.comment = comment
             c.put()
 
-            self.redirect('/%s' % post_id)
-        else:
-            msg = "You must log on before you can leave a comment"
-            self.render('login.html', error = msg, url = post_id)
+        self.redirect('/%s' % post)
 
 class LikeHandler(Handler):
     def post(self, post_id):
@@ -377,6 +411,8 @@ app = webapp2.WSGIApplication([('/', MainPage),
                                 ('/edit/([0-9]+)', EditPage),
                                 ('/delete/([0-9]+)', DeletePage),
                                 ('/comment/([0-9]+)', CommentHandler),
+                                ('/comment/delete/([0-9]+)', DeleteComment),
+                                ('/comment/edit/([0-9]+)', EditComment),
                                 ('/like/([0-9]+)', LikeHandler),
                                 ('/([0-9]+)', PostPage)]
                                 , debug = True)
