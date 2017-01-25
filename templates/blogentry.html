@@ -1,5 +1,24 @@
 {% extends "base.html" %}
 {% block content %}
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Confirm Delete</h4>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete?</p>
+      </div>
+      <div class="modal-footer">
+        <form method="post" action="/delete/{{p.key().id()}}">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Delete</button>
+        </form>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
 <div class="post">
     <div class="post-heading">
         <div class="post-title">
@@ -19,22 +38,27 @@
             <div class="col-md-6 text-left">
                 <span>by {{ p.author }}
                     {% if p.author == user.name %}
-                        | <a href="/{{p.key().id()}}">Edit</a>
-                        | <a href="/{{p.key().id()}}">Delete</a>
+                        | <a href="/edit/{{p.key().id()}}">Edit</a>
+                        | <a href="#" data-toggle="modal" data-target="#myModal">Delete</a>
                     {% endif %}
                 </span>
             </div>
             <div class="col-md-6 text-right">
                 <form method="post" action="/like/{{p.key().id()}}">
-                {% if p.author != user.name %}
-                    <button type="submit" class="btn btn-primary">Like this post! <i class="glyphicon glyphicon-thumbs-up"></i></button>
-                {% endif %}
+                    {% if p.author != user.name %}
+                        {% if p.userLikes(user) %}
+                            <button type="submit" class="btn btn-danger">Unlike this post!</button>
+                        {% else %}
+                            <button type="submit" class="btn btn-primary">Like this post!</button>
+                        {% endif %}
+                    {% endif %}
+                    <label> <i class="glyphicon glyphicon-thumbs-up"></i> {{ p.countLikes() }}</label>
                 </form>
             </div>
         </div>
     </div>
 </div>
-<h2>Comments ({{ p.comments }})</h2>
+<h2>Comments ({{ p.countComments() }})</h2>
 <div class="panel panel-primary">
     <div class="panel-heading">Add Comment...</div>
     <form novalidate method="post" action="/comment/{{p.key().id()}}">

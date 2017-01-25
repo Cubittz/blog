@@ -4,7 +4,8 @@ import hashlib
 import hmac
 from string import letters
 import random
-import json
+import time
+from urlparse import urlparse
 
 import jinja2
 import webapp2
@@ -113,8 +114,6 @@ class User(db.Model):
 
     @classmethod
     def login(cls, name, pw):
-        print name
-        print pw
         u = cls.by_name(name)
         if u and valid_pw(name, pw, u.pw_hash):
             return u
@@ -148,22 +147,37 @@ class Post(db.Model):
         self._render_text = self.content.replace('\n', '<br>')
         return render_str("post.html", p = self, user = user)
 
+    def countLikes(self):
+        p = self
+        l = db.GqlQuery("SELECT * FROM Likes WHERE post = :1", p)
+        return l.count()
+
+    def userLikes(self, user):
+        p = self
+        u = user
+        l = db.GqlQuery("SELECT * FROM Likes WHERE post = :1 AND user = :2", p, u)
+
+        if l.count() > 0:
+            return True
+
+    def countComments(self):
+        p = self
+        c = db.GqlQuery("SELECT * FROM Comment WHERE post = :1", p)
+        return c.count()
+
 class Comment(db.Model):
     author = db.ReferenceProperty(User)
     post = db.ReferenceProperty(Post)
     comment = db.TextProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
 
-class Like(db.Model):
+class Likes(db.Model):
     user = db.ReferenceProperty(User)
     post = db.ReferenceProperty(Post)
 
 class MainPage(Handler):
     def get(self):
         posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC limit 10")
-        for post in posts:
-            post.comments = 2
-
         self.render("index.html", posts = posts)
 
 class Signup(Handler):
@@ -249,50 +263,103 @@ class NewPage(Handler):
             error = "subject and content, pelase!"
             self.render("newpost.html", subject = subject, content = content, error = error)
 
-class CommentHandler(Handler):
-    def post(self, post_id):
-        comment = self.request.get('comment')
+class EditPage(Handler):
+    def get(self, post_id):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
-        user = self.user
+        self.render('editpost.html', post = post)
 
-        c = Comment(parent = blog_key(), author = user, post = post, comment = comment)
-        c.put()
+    def post(self, post_id):
+        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        post = db.get(key)
+        subject = self.request.get('subject')
+        content = self.request.get('content')
 
-        self.redirect('/%s' % post_id)
+        if subject and content:
+            post.subject = subject
+            post.content = content
+            post.put()
+            self.redirect('/%s' % post_id)
+        else:
+            error = "subject and content, pelase!"
+            self.render("editpost.html", subject = subject, content = content, error = error)
+
+class DeletePage(Handler):
+    def post(self, post_id):
+        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        post = db.get(key)
+
+        likes = db.GqlQuery("SELECT * FROM Likes WHERE post = :1", post)
+        if likes.count() > 0:
+            db.delete(likes)
+
+        comments = db.GqlQuery("SELECT * FROM Comment WHERE post = :1", post)
+        if comments.count() > 0:
+            db.delete(comments)
+
+        db.delete(post)
+        time.sleep(0.2)
+
+        self.redirect('/')
+
+class CommentHandler(Handler):
+    def post(self, post_id):
+        if self.user:
+            comment = self.request.get('comment')
+            key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+            post = db.get(key)
+            user = self.user
+
+            c = Comment(parent = blog_key(), author = user, post = post, comment = comment)
+            c.put()
+
+            self.redirect('/%s' % post_id)
+        else:
+            msg = "You must log on before you can leave a comment"
+            self.render('login.html', error = msg, url = post_id)
 
 class LikeHandler(Handler):
     def post(self, post_id):
-        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
-        post = db.get(key)
-        user = self.user
+        if self.user:
+            key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+            post = db.get(key)
+            user = self.user
 
-        l = Like(parent = blog_key(), user = user, post = post)
-        l.put()
+            likes = db.GqlQuery("SELECT * FROM Likes WHERE post = :1 AND user = :2", post, user)
+            if likes.count() > 0:
+                db.delete(likes)
+            else:
+                l = Likes(parent = blog_key(), user = user, post = post)
+                l.put()
 
-        self.redirect('/%s' % post_id)
+            self.redirect('/%s' % post_id)
+        else:
+            msg = 'You must log in before you can like a post'
+            self.render('login.html', error = msg, url = post_id)
 
 class Login(Handler):
     def get(self):
         self.render('login.html')
 
     def post(self):
+        url = '/'
+        url += self.request.get('url')
         username = self.request.get('username')
         password = self.request.get('password')
-        print username
+
         u = User.login(username, password)
         if u:
             self.login(u)
-            self.redirect('/welcome')
+            time.sleep(0.2)
+            self.redirect(url)
         else:
-            print 'hello'
             msg = 'Invalid Login'
             self.render('login.html', error = msg)
 
 class Logout(Handler):
     def get(self):
         self.logout()
-        self.redirect('/signup')
+        self.redirect('/login')
 
 class Welcome(Handler):
     def get(self):
@@ -307,6 +374,8 @@ app = webapp2.WSGIApplication([('/', MainPage),
                                 ('/logout', Logout),
                                 ('/welcome', Welcome),
                                 ('/newpost', NewPage),
+                                ('/edit/([0-9]+)', EditPage),
+                                ('/delete/([0-9]+)', DeletePage),
                                 ('/comment/([0-9]+)', CommentHandler),
                                 ('/like/([0-9]+)', LikeHandler),
                                 ('/([0-9]+)', PostPage)]
