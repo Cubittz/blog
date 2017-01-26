@@ -406,7 +406,7 @@ class LikeHandler(Handler):
             if not post:
                 return self.redirect('/')
 
-            if self.user.name == post.author:
+            if self.user.name != post.author:
                 user = self.user
 
                 likes = db.GqlQuery("SELECT * FROM Likes WHERE post = :1 AND user = :2", post, user)
