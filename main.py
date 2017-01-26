@@ -366,7 +366,7 @@ class DeleteComment(Handler):
             if not post:
                 return self.redirect('/')
 
-            if comment.user = self.user:
+            if comment.user == self.user:
                 db.delete(comment)
                 time.sleep(0.2)
 
@@ -387,7 +387,7 @@ class EditComment(Handler):
             if not post:
                 return self.redirect('/')
 
-            if c.user = self.user:
+            if c.user == self.user:
                 comment = self.request.get('editComment%s' % comment_id)
                 if comment:
                     c.comment = comment
