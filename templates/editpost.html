@@ -12,6 +12,7 @@
     </div>
     <div class="error">{{ error }}</div>
     <button class="btn btn-primary" type="submit">Submit</button>
+    <a href="/{{post.key().id()}}"><button class="btn btn-danger" type="button">Cancel</button></a>
 </form>
 <script>
     tinymce.init({ selector: 'textarea'});

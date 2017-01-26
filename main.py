@@ -345,7 +345,7 @@ class EditComment(Handler):
         key = db.Key.from_path('Comment', int(comment_id), parent=blog_key())
         c = db.get(key)
         post = c.post.key().id()
-        comment = 'Hello' ### self.request.get('modalComment%s' % comment_id)
+        comment = self.request.get('editComment%s' % comment_id)
         if comment:
             c.comment = comment
             c.put()

@@ -60,11 +60,6 @@ textarea {
 .post-content {
     margin-top: 5px;
 }
-.post-footer {
-    margin-top: 20px;
-    border-top: 1px solid #666666;
-    padding-top: 5px;
-}
 .comment-header {
     position: relative;
     border-bottom: 1px solid #666666;
@@ -81,4 +76,7 @@ textarea {
 }
 .comment-body {
     margin-bottom: 15px;
+}
+.edit-comment-button {
+    margin-bottom: 3px;
 }

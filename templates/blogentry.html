@@ -72,13 +72,14 @@
     </form>
 </div>
 {% for c in comments %}
+<div id="original-comment-{{loop.index}}">
     <div class="comment-header">
         <div>
             <span class="comment-title">{{ c.author.name }}</span>
             {% if c.author.name == user.name %}
-            <button class="btn btn-xs btn-primary" id="show-form-{{loop.index}}">Edit</button>
+            <button class="btn btn-xs btn-primary edit-comment-button" id="show-form-{{loop.index}}">Edit</button>
             <a href="#" data-toggle="modal" data-target="#deleteCommentModal{{c.key().id()}}">
-                <button class="btn btn-xs btn-danger">Delete</button>
+                <button class="btn btn-xs btn-danger edit-comment-button">Delete</button>
             </a>
             {% endif %}
         </div>
@@ -90,16 +91,19 @@
     <div class="comment-body">
         {{ c.comment }}
     </div>
-    <form novalidate method="post" action="/comment/{{p.key().id()}}" 
+</div>
+    <form novalidate method="post" action="/comment/edit/{{c.key().id()}}"
                 id="edit-comment-{{loop.index}}" style="display: none;">
         <div class="panel panel-primary">
             <div class="panel-heading">Edit Comment...</div>
             <div class="panel-body">
-                <textarea name="comment">{{c.comment}}</textarea>
+                <textarea name="editComment{{c.key().id()}}" autofocus>{{c.comment}}</textarea>
                 <div class="error">{{ error }}</div>
             </div>
             <div class="panel-footer">
                 <input type="submit" class="btn btn-primary" />
+                <button type="button" class="btn btn-danger"
+                    id="cancel-comment-{{loop.index}}">Cancel</button>
             </div>
         </div>
     </form>
@@ -108,7 +112,9 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
         <h4 class="modal-title">Confirm Delete</h4>
       </div>
       <div class="modal-body">
@@ -123,27 +129,6 @@
     </div>
   </div>
 </div>
-<!-- To look at using modal for editing comments. Currently not working.
-<div class="modal" id="editCommentModal{{c.key().id()}}" tabindex="-1" role="dialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title">Edit Comment</h4>
-      </div>
-      <div class="modal-body">
-        <textarea name="modalComment{{c.key().id()}}">{{c.comment}}</textarea>
-      </div>
-      <div class="modal-footer">
-        <form method="post" action="comment/edit/{{c.key().id()}}">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-            <button type="submit" class="btn btn-primary">Update</button>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
--->
 {% endfor %}
 {% endblock %}
 {% block javascript %}
