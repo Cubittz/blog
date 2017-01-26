@@ -252,55 +252,80 @@ class NewPage(Handler):
             self.redirect('/signup')
 
     def post(self):
-        subject = self.request.get('subject')
-        content = self.request.get('content')
+        if self.user:
+            subject = self.request.get('subject')
+            content = self.request.get('content')
 
-        if subject and content:
-            p = Post(parent = blog_key(), subject=subject, content = content, author = self.user.name)
-            p.put()
-            self.redirect('/%s' % str(p.key().id()))
+            if subject and content:
+                p = Post(parent = blog_key(), subject=subject, content = content, author = self.user.name)
+                p.put()
+                self.redirect('/%s' % str(p.key().id()))
+            else:
+                error = "subject and content, pelase!"
+                self.render("newpost.html", subject = subject, content = content, error = error)
         else:
-            error = "subject and content, pelase!"
-            self.render("newpost.html", subject = subject, content = content, error = error)
+            self.redirect('/signup')
 
 class EditPage(Handler):
     def get(self, post_id):
-        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
-        post = db.get(key)
-        self.render('editpost.html', post = post)
+        if self.user:
+            key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+            post = db.get(key)
+
+            if not post:
+                return self.redirect('/')
+
+            if post.author == self.user.name:
+                self.render('editpost.html', post = post)
+            else:
+                self.redirect('/%s' % post_id)
+        else:
+            msg = 'You must log in before you can edit a page'
+            self.render('login.html', error = msg)
 
     def post(self, post_id):
-        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
-        post = db.get(key)
-        subject = self.request.get('subject')
-        content = self.request.get('content')
+        if self.user:
+            key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+            post = db.get(key)
 
-        if subject and content:
-            post.subject = subject
-            post.content = content
-            post.put()
-            self.redirect('/%s' % post_id)
-        else:
-            error = "subject and content, pelase!"
-            self.render("editpost.html", subject = subject, content = content, error = error)
+            if not post:
+                return self.redirect('/')
+
+            if post.author == self.user.name:
+                subject = self.request.get('subject')
+                content = self.request.get('content')
+
+                if subject and content:
+                    post.subject = subject
+                    post.content = content
+                    post.put()
+                    self.redirect('/%s' % post_id)
+                else:
+                    error = "subject and content, pelase!"
+                    self.render("editpost.html", subject = subject, content = content, error = error)
 
 class DeletePage(Handler):
     def post(self, post_id):
-        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
-        post = db.get(key)
+        if self.user:
+            key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+            post = db.get(key)
 
-        likes = db.GqlQuery("SELECT * FROM Likes WHERE post = :1", post)
-        if likes.count() > 0:
-            db.delete(likes)
+            if not post:
+                return self.redirect('/')
 
-        comments = db.GqlQuery("SELECT * FROM Comment WHERE post = :1", post)
-        if comments.count() > 0:
-            db.delete(comments)
+            if post.author == self.user.name:
+                likes = db.GqlQuery("SELECT * FROM Likes WHERE post = :1", post)
+                if likes.count() > 0:
+                    db.delete(likes)
 
-        db.delete(post)
-        time.sleep(0.2)
+                comments = db.GqlQuery("SELECT * FROM Comment WHERE post = :1", post)
+                if comments.count() > 0:
+                    db.delete(comments)
 
-        self.redirect('/')
+                db.delete(post)
+                time.sleep(0.2)
+
+                self.redirect('/')
 
 class CommentHandler(Handler):
     def post(self, post_id):
@@ -331,42 +356,67 @@ class CommentHandler(Handler):
 
 class DeleteComment(Handler):
     def post(self, comment_id):
-        key = db.Key.from_path('Comment', int(comment_id), parent=blog_key())
-        comment = db.get(key)
-        post = comment.post.key().id()
+        if self.user:
+            key = db.Key.from_path('Comment', int(comment_id), parent=blog_key())
+            comment = db.get(key)
+            if not comment:
+                return self.redirect('/')
 
-        db.delete(comment)
-        time.sleep(0.2)
+            post = comment.post.key().id()
+            if not post:
+                return self.redirect('/')
 
-        self.redirect('/%s' % post)
+            if comment.user = self.user:
+                db.delete(comment)
+                time.sleep(0.2)
+
+                self.redirect('/%s' % post)
+        else:
+            msg = 'You must log in before you can delete a comment'
+            self.render('login.html', error = msg)
 
 class EditComment(Handler):
     def post(self, comment_id):
-        key = db.Key.from_path('Comment', int(comment_id), parent=blog_key())
-        c = db.get(key)
-        post = c.post.key().id()
-        comment = self.request.get('editComment%s' % comment_id)
-        if comment:
-            c.comment = comment
-            c.put()
+        if self.user:
+            key = db.Key.from_path('Comment', int(comment_id), parent=blog_key())
+            c = db.get(key)
+            if not c:
+                return self.redirect('/')
 
-        self.redirect('/%s' % post)
+            post = c.post.key().id()
+            if not post:
+                return self.redirect('/')
+
+            if c.user = self.user:
+                comment = self.request.get('editComment%s' % comment_id)
+                if comment:
+                    c.comment = comment
+                    c.put()
+
+                self.redirect('/%s' % post)
+        else:
+            msg = 'You must log in before you can edit a comment'
+            self.render('login.html', error = msg)
 
 class LikeHandler(Handler):
     def post(self, post_id):
         if self.user:
             key = db.Key.from_path('Post', int(post_id), parent=blog_key())
             post = db.get(key)
-            user = self.user
+            if not post:
+                return self.redirect('/')
 
-            likes = db.GqlQuery("SELECT * FROM Likes WHERE post = :1 AND user = :2", post, user)
-            if likes.count() > 0:
-                db.delete(likes)
-            else:
-                l = Likes(parent = blog_key(), user = user, post = post)
-                l.put()
+            if self.user.name == post.author:
+                user = self.user
 
-            self.redirect('/%s' % post_id)
+                likes = db.GqlQuery("SELECT * FROM Likes WHERE post = :1 AND user = :2", post, user)
+                if likes.count() > 0:
+                    db.delete(likes)
+                else:
+                    l = Likes(parent = blog_key(), user = user, post = post)
+                    l.put()
+
+                self.redirect('/%s' % post_id)
         else:
             msg = 'You must log in before you can like a post'
             self.render('login.html', error = msg, url = post_id)
